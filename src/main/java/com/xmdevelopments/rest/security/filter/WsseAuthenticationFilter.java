@@ -41,7 +41,6 @@ public class WsseAuthenticationFilter extends GenericFilterBean {
 	public WsseAuthenticationFilter(AuthenticationManager authenticationManager) {
 		logger.info("WsseAuthenticationFilter()->called");
 		this.authenticationManager = authenticationManager;
-		
 	}
 
 	@Override
@@ -49,48 +48,43 @@ public class WsseAuthenticationFilter extends GenericFilterBean {
 			throws IOException, ServletException {
         String prefix = "doFilter()";
 		logger.info(prefix + "->called");
-		HttpServletRequest httpRequest = asHttp(request);
+		
+		try {
+			HttpServletRequest httpRequest = asHttp(request);
+			Optional<String> wsseHeader = Optional.fromNullable(httpRequest.getHeader("X-WSSE"));
 
-		Optional<String> wsseHeader = Optional.fromNullable(httpRequest.getHeader("X-WSSE"));
+			if (!wsseHeader.isPresent()) {
+				processAuthentication(request, response, chain, null, null, null, null);
+		
+			} else {
+				Matcher matcher = parseWsseHeader(wsseHeader);
 
-		if (!wsseHeader.isPresent()) {
-			processAuthentication(request, response, chain, null, null, null, null);
-			return;
+				if (!matcher.find()) {
+					logger.info(prefix +"->wsse header but NO MATCH");
+					processAuthentication(request, response, chain, null, null, null, null);
+				}
+				String username = matcher.group(1);
+				String password = matcher.group(2);
+				String nonce = matcher.group(3);
+				String created = matcher.group(4);
+				processAuthentication(request, response, chain, username, password, nonce, created);
+			}
+
+		} catch(IllegalStateException isEx) {
+			logger.error(prefix,isEx);
 		}
-
-		Matcher matcher = parseWsseHeader(wsseHeader);
-
-		if (!matcher.find()) {
-			logger.info(prefix +"->Wsse header but NO MATCH");
-			processAuthentication(request, response, chain, null, null, null, null);
-
-		}
-
-		String username = matcher.group(1);
-		String password = matcher.group(2);
-		String nonce = matcher.group(3);
-		String created = matcher.group(4);
-
-		processAuthentication(request, response, chain, username, password, nonce, created);
-		return;
-
 	}
 	
 	/**
 	 * Parse Wsse Header
-	 *  
 	 * @param wsseHeader
 	 * @return
 	 */
 	private Matcher parseWsseHeader(Optional<String> wsseHeader) {
-
 		String wsseRegex = "UsernameToken Username=\"(\\S+)\", PasswordDigest=\"(\\S+)\", Nonce=\"(\\w+)\", Created=\"(\\S+)\"";
-		String prefix = "parseWsseHeader()";
  
-		logger.debug(prefix +"->Wsse Header: " + wsseHeader.get());
-
+		logger.debug("parseWsseHeader()->Wsse Header: " + wsseHeader.get());
 		Pattern pattern = Pattern.compile(wsseRegex);
-
 		return pattern.matcher(wsseHeader.get());
 	}
 
@@ -117,7 +111,7 @@ public class WsseAuthenticationFilter extends GenericFilterBean {
 		HttpServletResponse httpResponse = asHttp(response);
 
 		String resourcePath = new UrlPathHelper().getPathWithinApplication(httpRequest);
-
+	
 		try {
 			
 			Optional<String> usernameOpt = Optional.fromNullable(username);
@@ -125,27 +119,19 @@ public class WsseAuthenticationFilter extends GenericFilterBean {
 			Optional<String> nonceOpt = Optional.fromNullable(nonce);
 			Optional<String> createdOpt = Optional.fromNullable(created);
 			
-			logger.info(prefix+"->Trying to authenticate user {} for management endpoint by X-wsse method");
-			
+			logger.info(prefix+"->trying to authenticate user {} for management endpoint by X-wsse method");
 			processAuthentication(usernameOpt, passwordOpt, nonceOpt, createdOpt);
-		
-			logger.info(prefix +"->ManagementEndpointAuthenticationFilter is passing request down the filter chain");
-			
+			logger.info(prefix +"->managementEndpointAuthenticationFilter is passing request down the filter chain");
 			chain.doFilter(request, response);
-		} catch (AuthenticationException authenticationException) {
-			
-			logger.error(prefix,authenticationException);
-			
+	
+		} catch (AuthenticationException aEx) {
+			logger.error(prefix,aEx);
 			SecurityContextHolder.clearContext();
-			
 			ObjectMapper mapper = new ObjectMapper();
-			
-			Response restResponse = new Response(authenticationException.getMessage(), HttpServletResponse.SC_BAD_REQUEST);
-			
+			Response restResponse = new Response(aEx.getMessage(), HttpServletResponse.SC_UNAUTHORIZED);
 			httpResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
-			httpResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			httpResponse.getOutputStream().println(mapper.writeValueAsString(restResponse));
-			
 		}
 	}
 
@@ -160,10 +146,9 @@ public class WsseAuthenticationFilter extends GenericFilterBean {
 
 	private void processAuthentication(Optional<String> username,
 			Optional<String> password, Optional<String> nonce, Optional<String> created) throws IOException {
-
 		logger.info("processAuthentication()->called");
-		Authentication resultOfAuthentication = tryToAuthenticate(username, password, nonce, created);
 
+		Authentication resultOfAuthentication = tryToAuthenticate(username, password, nonce, created);
 		SecurityContextHolder.getContext().setAuthentication(resultOfAuthentication);
 	}
 	
@@ -176,8 +161,6 @@ public class WsseAuthenticationFilter extends GenericFilterBean {
 		logger.info(prefix +"->tryToAuthenticate()->called");
 		
 		WsseCredentials wsseCredentials = new WsseCredentials(password, nonce, created);
-		
-						
 		Authentication responseAuthentication = authenticationManager.authenticate(
 				new WsseAuthenticationToken(username, wsseCredentials)
 				);
@@ -189,6 +172,4 @@ public class WsseAuthenticationFilter extends GenericFilterBean {
 		logger.info(prefix + "->" + username.toString() + "->Successfully authenticated");
 		return responseAuthentication;
 	}
-
-
 }

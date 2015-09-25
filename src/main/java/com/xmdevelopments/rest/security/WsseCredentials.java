@@ -8,9 +8,7 @@ public class WsseCredentials {
 	final static Logger logger = Logger.getLogger(SecurityConfig.class);
 	
 	private Optional<String> passwordDigest;
-	
 	private Optional<String> nonce;
-	
 	private Optional<String> created;
 
 	public WsseCredentials(Optional<String> passwordDigest, Optional<String> nonce, Optional<String> created) {

@@ -20,7 +20,7 @@ import com.xmdevelopments.rest.security.WsseCredentials;
 
 public class WsseAuthenticationProvider implements AuthenticationProvider {
 
-    public static final String INVALID_CREDENTIALS = "Invalid Credentials";
+    public static final String INVALID_CREDENTIALS = "Invalid credentials";
 
     private UserController userController = new UserController();
     
@@ -39,27 +39,25 @@ public class WsseAuthenticationProvider implements AuthenticationProvider {
         
 
       	if (credentialsMissing(username, wsseCredentials)) {
-      		logger.info(prefix +"->Credentials missing");  	
+      		logger.info(prefix +"->credentials missing");  	
       		throw new BadCredentialsException(INVALID_CREDENTIALS);
         }
         
-        logger.info(prefix+ "->Username: " + username.get());
+        logger.info(prefix+ "->username: " + username.get());
                 
       	Response response  = userController.getUser(username.get(), false, 1);
       	User user = (User)response.getData();     	
      	if (user == null) {     		
-     		logger.info(prefix +"->User not found");     		
+     		logger.info(prefix +"->user not found");     		
      		throw new BadCredentialsException(INVALID_CREDENTIALS);
      	}
      			
      	if (isPasswordInvalid(wsseCredentials, user.getPassword())) {     		
-     		logger.info(prefix +"->Passwords don't match");
-     		
+     		logger.info(prefix +"->passwords don't match");
      		throw new BadCredentialsException(INVALID_CREDENTIALS);
      	}
      	
-      	logger.info(prefix +"->--Valid User---");
-      	logger.info(prefix +"->User Id: " + user.getID());  	
+      	//logger.info(prefix +"->Valid user->User Id: " + user.getID());  	
 
         return new UsernamePasswordAuthenticationToken("test", null,
                 AuthorityUtils.commaSeparatedStringToAuthorityList("ROLE_BACKEND_ADMIN"));
@@ -79,8 +77,9 @@ public class WsseAuthenticationProvider implements AuthenticationProvider {
     	//sha1(md5($passwd));
         //PasswordDigest = Base64 \ (SHA1 (Nonce + CreationTimestamp + Password))
     	String prefix = "isPasswordInvalid()";
-    	logger.info(prefix + "->Nonce: " + wsseCredentials.getNonce().get());
-    	logger.info(prefix + "->Created: " + wsseCredentials.getCreated().get());
+    	logger.info(prefix + "->called");
+    	//logger.info(prefix + "->Nonce: " + wsseCredentials.getNonce().get());
+    	//logger.info(prefix + "->Created: " + wsseCredentials.getCreated().get());
     	
     	byte[] calculatedPasswordDigest = Base64.encodeBase64(DigestUtils.sha(
     			wsseCredentials.getNonce().get() +
@@ -89,9 +88,7 @@ public class WsseAuthenticationProvider implements AuthenticationProvider {
     			));
     	
     	String calculatedPasswordDigestString = new String(calculatedPasswordDigest);
-
-    	logger.info(prefix +"->Calculated Password Digest: " + calculatedPasswordDigestString);
-    	
+    	//logger.info(prefix +"->Calculated Password Digest: " + calculatedPasswordDigestString);
     	return !calculatedPasswordDigestString.equals(wsseCredentials.getPasswordDigest().get());
     }
     
