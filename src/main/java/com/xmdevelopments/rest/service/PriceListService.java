@@ -58,13 +58,13 @@ public class PriceListService {
      */
 	@RequestMapping(value = "/v1/priceLists/code", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	public ResponseEntity<Response> getPriceLists(@RequestParam("priceListCode") String priceListCode,
+	public ResponseEntity<Response> getPriceLists(@RequestParam("code") String code,
 			@RequestParam(value = "limit", defaultValue = "100") Integer limit,
 			@RequestParam(value = "page", defaultValue = "0") Integer page) throws BadRequestException {
 		logger.info("getPriceLists()->called");
 		Response response = new Response();
 		try {
-			response = priceListController.getPriceLists(priceListCode, page, limit);
+			response = priceListController.getPriceLists(code, page, limit);
 		} catch (Exception ex) {
 			throw new BadRequestException("Invalid request");
 		}

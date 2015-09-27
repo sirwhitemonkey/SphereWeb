@@ -63,4 +63,22 @@ public class SettingService {
 		}
 		return new ResponseEntity<Response>(response, HttpStatus.OK);
 	}
+	
+	/**
+	 * Checking the connection
+	 * @return {Response}
+	 * @throws BadRequestException
+	 */
+	@RequestMapping(value = "/v1/setting/checkConnection", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseBody
+	public ResponseEntity<Response> checkConnection() throws BadRequestException {
+		logger.info("checkConnection()->called");
+		Response response = new Response();
+		try {
+			response = settingController.checkConnection();
+		} catch (Exception ex) {
+			throw new BadRequestException("Invalid request");
+		}
+		return new ResponseEntity<Response>(response, HttpStatus.OK);
+	}
 }
