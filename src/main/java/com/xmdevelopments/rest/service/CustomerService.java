@@ -30,6 +30,7 @@ public class CustomerService {
 
 	/**
 	 * Get all customers
+	 * @param date_last_updated, date last updated
 	 * @param limit, limit
 	 * @param page, pagination
 	 * @return {Response} 
@@ -37,12 +38,13 @@ public class CustomerService {
 	 */
 	@RequestMapping(value = "/v1/customers", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	public ResponseEntity<Response> getCustomers(@RequestParam(value = "limit", defaultValue = "100") Integer limit,
+	public ResponseEntity<Response> getCustomers(@RequestParam(value = "date_last_updated") String date_last_updated,
+			@RequestParam(value = "limit", defaultValue = "100") Integer limit,
 			@RequestParam(value = "page", defaultValue = "0") Integer page) throws BadRequestException {
 		logger.info("getCustomers()->called");
 		Response response = new Response();
 		try {
-			response = customerController.getCustomers(page, limit);
+			response = customerController.getCustomers(date_last_updated, page, limit);
 		} catch (Exception ex) {
 			throw new BadRequestException("Invalid request");
 		}

@@ -30,6 +30,7 @@ public class PriceListService {
 
 	/**
 	 * Get all price lists
+	 * @param date_last_updated, date last updated
 	 * @param limit, limit
 	 * @param page, pagination
 	 * @return {Response} 
@@ -37,12 +38,12 @@ public class PriceListService {
 	 */
 	@RequestMapping(value = "/v1/priceLists", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	public ResponseEntity<Response> getPriceLists(@RequestParam(value = "limit", defaultValue = "100") Integer limit,
+	public ResponseEntity<Response> getPriceLists(@RequestParam(value = "date_last_updated") String date_last_updated,@RequestParam(value = "limit", defaultValue = "100") Integer limit,
 			@RequestParam(value = "page", defaultValue = "0") Integer page) throws BadRequestException {
 		logger.info("getPriceLists()->called");
 		Response response = new Response();
 		try {
-			response = priceListController.getPriceLists(page, limit);
+			response = priceListController.getPriceLists(date_last_updated, page, limit);
 		} catch (Exception ex) {
 			throw new BadRequestException("Invalid request");
 		}
@@ -51,6 +52,7 @@ public class PriceListService {
 	
     /**
      * Get all price lists using price list code
+	 * @param date_last_updated, date last updated
 	 * @param limit, limit
 	 * @param page, pagination
 	 * @return {Response} 
@@ -58,13 +60,13 @@ public class PriceListService {
      */
 	@RequestMapping(value = "/v1/priceLists/code", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseBody
-	public ResponseEntity<Response> getPriceLists(@RequestParam("code") String code,
+	public ResponseEntity<Response> getPriceLists(@RequestParam(value = "date_last_updated") String date_last_updated,@RequestParam("code") String code,
 			@RequestParam(value = "limit", defaultValue = "100") Integer limit,
 			@RequestParam(value = "page", defaultValue = "0") Integer page) throws BadRequestException {
 		logger.info("getPriceLists()->called");
 		Response response = new Response();
 		try {
-			response = priceListController.getPriceLists(code, page, limit);
+			response = priceListController.getPriceLists(date_last_updated, code, page, limit);
 		} catch (Exception ex) {
 			throw new BadRequestException("Invalid request");
 		}
